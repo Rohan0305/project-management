@@ -61,6 +61,15 @@ export interface Task {
   attachments?: Attachment[];
 }
 
+export interface Comment {
+  id: number;
+  text: string;
+  taskId: number;
+  userId: number;
+
+  user: User;
+}
+
 export interface SearchResults {
   tasks?: Task[];
   projects?: Project[];
@@ -87,7 +96,7 @@ export const api = createApi({
     },
   }),
   reducerPath: "api",
-  tagTypes: ["Projects", "Users", "Tasks", "Teams"],
+  tagTypes: ["Projects", "Users", "Tasks", "Teams", "Comments"],
   endpoints: (build) => ({
     getAuthUser: build.query({
       queryFn: async (_, _queryApi, _extraoptions, fetchWithBQ) => {
@@ -149,6 +158,13 @@ export const api = createApi({
         { type: "Tasks", id: taskId },
       ],
     }),
+    getCommentsByTask: build.query<Comment[], number>({
+      query: (taskId) => `comments?taskId=${taskId}`,
+      providesTags: (result, error, taskId) =>
+        result
+          ? result.map(({ id }) => ({ type: "Comments", id }))
+          : [{ type: "Comments", id: taskId }],
+    }),
     getUsers: build.query<User[], void>({
       query: () => "users",
       providesTags: ["Users"],
@@ -172,6 +188,7 @@ export const {
   useSearchQuery,
   useGetUsersQuery,
   useGetTasksByUserQuery,
+  useGetCommentsByTaskQuery,
   useGetTeamsQuery,
   useGetAuthUserQuery,
 } = api;

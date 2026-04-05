@@ -1,6 +1,10 @@
 "use client";
 
-import { useGetTasksQuery, useUpdateTaskStatusMutation } from "@/state/api";
+import {
+  useGetCommentsByTaskQuery,
+  useGetTasksQuery,
+  useUpdateTaskStatusMutation,
+} from "@/state/api";
 import React from "react";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -167,6 +171,22 @@ const Task = ({ task }: TaskProps) => {
     </div>
   );
 
+  const [showComments, setShowComments] = React.useState(false);
+
+  const handleShowComments = () => {
+    setShowComments((prev) => !prev);
+  };
+
+  const {
+    data: comments,
+    isLoading,
+    isError: isCommentsError,
+  } = useGetCommentsByTaskQuery(task.id || 0, {
+    skip: showComments === false && numberOfComments > 0,
+  });
+
+  console.log("Comments for task", task.id, ":", showComments, comments);
+
   return (
     <div
       ref={(instance) => {
@@ -249,11 +269,38 @@ const Task = ({ task }: TaskProps) => {
             )}
           </div>
           <div className="flex items-center text-gray-500 dark:text-neutral-500">
-            <MessageSquareMore size={20} />
+            <MessageSquareMore
+              className="cursor-pointer"
+              size={20}
+              onClick={() => handleShowComments()}
+            />
             <span className="ml-1 text-sm dark:text-neutral-400">
               {numberOfComments}
             </span>
           </div>
+        </div>
+        <div className="mb-2 mt-3">
+          {showComments &&
+            comments &&
+            comments.length > 0 &&
+            comments.map((comment) => (
+              <div
+                key={comment.id}
+                className="flex w-full flex-row items-start gap-3 items-center"
+              >
+                <Image
+                  key={comment.user?.userId}
+                  src={`https://pm-s3-bucket-rohanv.s3.us-east-1.amazonaws.com/${comment.user?.profilePictureUrl!}`}
+                  alt={comment.user?.username ?? ""}
+                  width={30}
+                  height={30}
+                  className="h-10 w-10 rounded-full border-2 border-white object-cover dark:border-dark-secondary"
+                />
+                <p className="text-sm text-gray-600 dark:text-neutral-500">
+                  {comment.text}
+                </p>
+              </div>
+            ))}
         </div>
       </div>
     </div>
