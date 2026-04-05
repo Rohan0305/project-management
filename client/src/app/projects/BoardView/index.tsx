@@ -185,8 +185,6 @@ const Task = ({ task }: TaskProps) => {
     skip: showComments === false && numberOfComments > 0,
   });
 
-  console.log("Comments for task", task.id, ":", showComments, comments);
-
   return (
     <div
       ref={(instance) => {
