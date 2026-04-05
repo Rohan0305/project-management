@@ -19,17 +19,34 @@ const Timeline = () => {
   });
 
   const ganttTasks = useMemo(() => {
-    return (
-      projects?.map((project) => ({
-        start: new Date(project.startDate as string),
-        end: new Date(project.endDate as string),
-        name: project.name,
-        id: `Project-${project.id}`,
-        type: "project" as TaskTypeItems,
-        progress: 50,
-        isDisabled: false,
-      })) || []
-    );
+    if (!projects || projects.length === 0) return [];
+
+    const validTasks = projects
+      .filter((project) => {
+        if (!project) return false;
+        if (!project.startDate || !project.endDate) return false;
+        
+        const startTime = new Date(project.startDate).getTime();
+        const endTime = new Date(project.endDate).getTime();
+        
+        return !Number.isNaN(startTime) && !Number.isNaN(endTime);
+      })
+      .map((project) => {
+        const start = new Date(project.startDate!);
+        const end = new Date(project.endDate!);
+
+        return {
+          start,
+          end,
+          name: project.name ?? "Untitled Project",
+          id: `Project-${project.id}`,
+          type: "project" as TaskTypeItems,
+          progress: 50,
+          isDisabled: false,
+        };
+      });
+
+    return validTasks.length > 0 ? validTasks : [];
   }, [projects]);
 
   const handleViewModeChange = (
@@ -64,15 +81,21 @@ const Timeline = () => {
 
       <div className="overflow-hidden rounded-md bg-white shadow dark:bg-dark-secondary dark:text-white">
         <div className="timeline">
-          <Gantt
-            tasks={ganttTasks}
-            {...displayOptions}
-            columnWidth={displayOptions.viewMode === ViewMode.Month ? 150 : 100}
-            listCellWidth="100px"
-            projectBackgroundColor={isDarkMode ? "#101214" : "#1f2937"}
-            projectProgressColor={isDarkMode ? "#1f2937" : "#aeb8c2"}
-            projectProgressSelectedColor={isDarkMode ? "#000" : "#9ba1a6"}
-          />
+          {ganttTasks && ganttTasks.length > 0 ? (
+            <Gantt
+              tasks={ganttTasks}
+              {...displayOptions}
+              columnWidth={displayOptions.viewMode === ViewMode.Month ? 150 : 100}
+              listCellWidth="100px"
+              projectBackgroundColor={isDarkMode ? "#101214" : "#1f2937"}
+              projectProgressColor={isDarkMode ? "#1f2937" : "#aeb8c2"}
+              projectProgressSelectedColor={isDarkMode ? "#000" : "#9ba1a6"}
+            />
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              No projects with start and end dates to display
+            </div>
+          )}
         </div>
       </div>
     </div>
